@@ -6,7 +6,7 @@
 <title>Casa · Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
     --radius: 14px;
@@ -17,7 +17,7 @@
   }
 
   [data-theme="light"]{
-    --paper: #E4E1D5;
+    --paper: #E9E7DE;
     --surface: #F7F5EE;
     --surface-soft: #EFEDE3;
     --ink: #21241F;
@@ -31,9 +31,1536 @@
     --clay: #9C5B3F;
     --clay-tint: #EEDFD2;
     --clay-line: #E1C5AE;
-    --shadow: 0 24px 60px -28px rgba(33, 36, 31, 0.35);
+    --santo-accent: #B8791E;
+    --gestione-bg: #E9ECEC;
+    --shadow: 0 18px 44px -26px rgba(33, 36, 31, 0.3);
   }
 
+  [data-theme="dark"]{
+    --paper: #14160F;
+    --surface: #1E2118;
+    --surface-soft: #262A1F;
+    --ink: #ECEAE0;
+    --ink-soft: #9A9D8C;
+    --moss: #8FB28C;
+    --moss-strong: #A9C8A5;
+    --moss-tint: #2A3324;
+    --line: #34382B;
+    --warn: #D98B73;
+    --warn-tint: #3A2A24;
+    --clay: #D99A78;
+    --clay-tint: #332620;
+    --clay-line: #463528;
+    --santo-accent: #E0A845;
+    --gestione-bg: #20232A;
+    --shadow: 0 18px 44px -26px rgba(0, 0, 0, 0.55);
+  }
+
+  *{ box-sizing: border-box; }
+  html, body{ margin:0; padding:0; }
+  body{ min-height: 100vh; font-family: var(--font-body); color: var(--ink); background: var(--paper); transition: background-color .3s ease; }
+
+  @media (prefers-reduced-motion: reduce){ *{ transition: none !important; animation: none !important; } }
+
+  .page-shell{ min-height: 100vh; display: flex; justify-content: center; padding: clamp(16px, 4vw, 56px); }
+
+  .app{
+    width: 100%; max-width: 940px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    padding: clamp(20px, 4vw, 34px);
+    transition: background-color .4s ease, border-color .4s ease;
+  }
+
+  /* ---------- Top zone: clearly separated from the content below ---------- */
+  .topbar{
+    display:flex; align-items:center; justify-content: space-between;
+    padding-bottom: 14px; margin-bottom: 22px;
+    border-bottom: 1px solid var(--line);
+  }
+  .brand{ font-family: var(--font-display); font-weight: 600; font-size: 1.02rem; letter-spacing: 0.04em; text-transform: uppercase; }
+  .brand span{ color: var(--moss); margin: 0 2px; }
+  .topbar-right{ display:flex; align-items:center; gap:14px; }
+  .date{ font-family: var(--font-mono); font-size: 0.76rem; color: var(--ink-soft); }
+  .icon-btn{
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 1px solid var(--line); background: var(--surface-soft); color: var(--ink);
+    font-size: 1rem; cursor: pointer; display: flex; align-items:center; justify-content:center;
+    transition: transform .3s cubic-bezier(.4,0,.2,1), background .2s ease, border-color .2s ease;
+  }
+  .icon-btn:hover{ border-color: var(--moss); }
+  .icon-btn:active{ transform: scale(0.94); }
+  .icon-btn.open{ transform: rotate(90deg); }
+  .icon-btn:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible{ outline: 2px solid var(--moss); outline-offset: 2px; }
+  .hidden{ display:none; }
+
+  @keyframes viewIn{ from{ opacity:0; transform: translateY(6px); } to{ opacity:1; transform: translateY(0); } }
+  .view-enter{ animation: viewIn .26s cubic-bezier(.2,.7,.3,1); }
+  @keyframes fadeContent{ from{ opacity:0; } to{ opacity:1; } }
+
+  /* ---------- Modern card surface, shared by the small status cards ---------- */
+  .today-card{
+    position: relative; overflow:hidden; border-radius: 16px;
+    background: var(--surface); border: 1px solid var(--line);
+    box-shadow: 0 1px 2px rgba(20,20,15,.04), 0 6px 18px -10px rgba(20,20,15,.10);
+    animation: fadeContent .3s ease;
+  }
+  [data-theme="dark"] .today-card{ box-shadow: 0 1px 2px rgba(0,0,0,.2), 0 6px 18px -10px rgba(0,0,0,.4); }
+  .today-eyebrow{ font-family: var(--font-body); font-weight: 600; font-size: 0.66rem; letter-spacing:.04em; text-transform:uppercase; color: var(--ink-soft); margin: 0 0 8px; }
+
+  /* ---------- Splid: the first/main card — balance up front, swipe up for recent expenses ---------- */
+  .splid-card{ padding: 16px 18px 10px; }
+  .splid-empty{ font-size: 0.84rem; color: var(--ink-soft); margin: 4px 0 10px; line-height: 1.4; }
+  .splid-balance-list{ display:flex; flex-direction:column; gap: 7px; margin: 6px 0 4px; }
+  .splid-balance-row{ display:flex; justify-content:space-between; align-items:center; font-size: 0.86rem; }
+  .splid-balance-row .who{ color: var(--ink); }
+  .splid-amount{ font-weight: 700; font-family: var(--font-mono); font-size: 0.84rem; }
+  .splid-amount.positive{ color: var(--moss-strong); }
+  .splid-amount.negative{ color: var(--warn); }
+  .splid-amount.neutral{ color: var(--ink-soft); }
+  .splid-swipe-hint{
+    display:block; width:100%; background:none; border:none; text-align:center;
+    font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-soft);
+    padding: 8px 0 2px; cursor: pointer; touch-action: none;
+  }
+  .splid-swipe-hint:hover{ color: var(--moss-strong); }
+  .splid-recent{ max-height: 0; overflow: hidden; transition: max-height .28s cubic-bezier(.4,0,.2,1); }
+  .splid-recent.open{ margin-top: 6px; padding-top: 8px; border-top: 1px solid var(--line); padding-bottom: 8px; }
+  .splid-recent-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap: 7px; max-height: 220px; overflow-y: auto; }
+  .splid-recent-row{ display:flex; justify-content:space-between; gap: 10px; font-size: 0.78rem; }
+  .splid-recent-row .who{ color: var(--ink-soft); flex-shrink: 0; }
+  .splid-recent-row .what{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  /* ---------- Quick row: Meteo + Rifiuti, two small independent cards ---------- */
+  .quick-row{ display:flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .today-card.meteo, .today-card.rifiuti-card{ flex: 1 1 160px; padding: 13px 16px; }
+  .weather-row{ display:flex; align-items:baseline; gap: 8px; }
+  .weather-icon{ font-size: 1.4rem; line-height:1; }
+  .weather-temp{ font-weight: 700; font-size: 1.25rem; color: var(--ink); }
+  .weather-place{ font-size: 0.74rem; color: var(--ink-soft); }
+  .rifiuti-row{ display:flex; align-items:center; gap:8px; margin-bottom: 6px; flex-wrap: wrap; }
+  .rifiuti-row:last-child{ margin-bottom: 0; }
+  .rifiuti-label{ font-size: 0.74rem; color: var(--ink-soft); min-width: 48px; }
+  .bin-chip{
+    display:inline-flex; align-items:center; gap:5px;
+    font-family: var(--font-body); font-size: 0.7rem; font-weight:500;
+    padding: 3px 9px; border-radius: 999px; color: #fff;
+  }
+  .bin-dot{ width:6px; height:6px; border-radius:50%; background: rgba(255,255,255,.85); }
+
+  /* ---------- Santo del giorno: its own independent swipeable row ---------- */
+  .santo-carousel{
+    display:flex; gap:14px; overflow-x:auto; align-items:stretch;
+    scroll-snap-type: x mandatory; cursor: grab;
+    padding-bottom: 4px; margin-bottom: 26px; scrollbar-width: thin;
+  }
+  .santo-carousel.grabbing{ cursor: grabbing; }
+  .santo-carousel::-webkit-scrollbar{ height: 5px; }
+  .santo-carousel::-webkit-scrollbar-thumb{ background: var(--line); border-radius: 999px; }
+  .santo-carousel .carousel-slot{ flex: 0 0 auto; width: min(88%, 520px); scroll-snap-align: start; }
+  .santo-carousel .carousel-slot.empty{ display: none; }
+  .santo-carousel .carousel-slot .today-card{ width: 100%; height: 100%; }
+  .today-card.placeholder{
+    flex: 0 0 auto; width: 64px; scroll-snap-align: start;
+    display:flex; align-items:center; justify-content:center;
+    border: 1.5px dashed var(--line); background: transparent; box-shadow:none;
+    color: var(--ink-soft); font-size: 1.3rem; font-weight: 300;
+  }
+
+  .today-card.santo{ display:flex; align-items:stretch; padding: 0; min-height: 248px; }
+  .santo-photo{ width: 33.333%; flex-shrink: 0; position: relative; overflow: hidden; background: var(--surface-soft); }
+  .santo-img{ width:100%; height:100%; object-fit: cover; display:block; }
+  .santo-img.fallback{ object-fit: contain; padding: 20%; background: var(--moss-tint); }
+  .santo-info{ width: 66.666%; padding: 16px 18px 12px; display:flex; flex-direction:column; min-width:0; }
+  .santo-info .today-eyebrow{ color: var(--santo-accent); }
+  .santo-name{ font-weight: 700; font-size: 1.02rem; margin:0; line-height: 1.3; color: var(--ink); }
+  .santo-role{ font-size: 0.78rem; color: var(--ink-soft); margin: 1px 0 7px; font-style: italic; }
+  .santo-blurb{ font-size: 0.8rem; line-height:1.42; margin: 0 0 8px; color: var(--ink-soft); }
+  .santo-link{ font-size: 0.76rem; font-weight:600; color: var(--santo-accent); text-decoration: none; }
+  .santo-link:hover{ text-decoration: underline; }
+  .santo-extra{ margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); flex: 1; min-height: 0; overflow-y: auto; }
+  .santo-extra-label{ font-family: var(--font-mono); font-size: 0.64rem; letter-spacing:.05em; text-transform:uppercase; color: var(--ink-soft); margin: 0 0 5px; }
+  .santo-extra-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap: 4px; }
+  .santo-extra-list li{ font-size: 0.74rem; color: var(--ink-soft); line-height:1.3; }
+  .santo-extra-list b{ color: var(--ink); font-weight: 600; }
+
+  /* ---------- Zones: each its own clean, distinctly coloured panel ---------- */
+  .zone{ border-radius: 18px; padding: 18px 18px 20px; margin-bottom: 20px; }
+  .zone.cucina{ background: var(--moss-tint); }
+  .zone.gestione{ background: var(--gestione-bg); }
+  .zone-head{ display:flex; align-items:baseline; gap:10px; margin-bottom: 12px; }
+  .zone-title{ font-family: var(--font-display); font-size: 0.9rem; text-transform: uppercase; letter-spacing: .06em; margin: 0; }
+  .zone-sub{ font-size: 0.78rem; color: var(--ink-soft); margin: 0; }
+
+  .zone-grid{
+    position: relative;
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: minmax(148px, auto);
+    grid-auto-flow: dense; gap: 14px; margin-bottom: 16px;
+  }
+  @media (max-width: 680px){ .zone-grid{ grid-template-columns: 1fr; } }
+
+  .tile{
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: 0 1px 2px rgba(20,20,15,.03);
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    transition: border-color .15s ease, background-color .3s ease, box-shadow .15s ease;
+  }
+  .tile:hover{ border-color: var(--moss); box-shadow: 0 4px 14px -8px rgba(20,20,15,.14); }
+  .tile.resizing{ border-color: var(--moss); box-shadow: 0 0 0 2px var(--moss-tint) inset; }
+  .tile.dragging-free{ box-shadow: 0 22px 40px -16px rgba(0,0,0,.32); cursor: grabbing; }
+
+  .tile-placeholder{ border: 1.5px dashed var(--line); border-radius: var(--radius); background: var(--paper); opacity: .5; }
+
+  .tile-watermark{ position: absolute; right: -10px; bottom: -10px; width: 96px; height: 96px; color: var(--ink); opacity: .05; pointer-events: none; z-index: 0; }
+  [data-theme="dark"] .tile-watermark{ opacity: .08; }
+  .tile-watermark svg{ width:100%; height:100%; display:block; }
+
+  .tile-head{ position: relative; z-index: 1; display:flex; align-items:center; gap:8px; padding: 11px 15px 4px; }
+  .grip{ cursor: grab; color: var(--ink-soft); font-size: 0.88rem; letter-spacing: 1px; user-select: none; touch-action: none; }
+  .grip:active{ cursor: grabbing; }
+  .tile-title{ font-family: var(--font-display); font-size: 0.96rem; flex: 1; }
+  .tile-tag{
+    font-family: var(--font-mono); font-size: 0.68rem; font-weight: 500; color: var(--moss-strong); background: var(--moss-tint);
+    padding: 3px 8px; border-radius: 999px; white-space: nowrap; transition: background-color .3s ease, color .3s ease;
+  }
+
+  .tile-body{ position: relative; z-index: 1; padding: 7px 15px 18px; flex: 1; display: flex; flex-direction: column; gap: 9px; animation: fadeContent .2s ease; }
+  .tile[data-size="lg"] .tile-body{ max-height: 410px; overflow-y: auto; }
+
+  .resize-handle{
+    position: absolute; right: 4px; bottom: 4px; width: 22px; height: 22px;
+    z-index: 3; cursor: nwse-resize; touch-action: none;
+    display:flex; align-items:flex-end; justify-content:flex-end; padding: 4px;
+  }
+  .resize-handle::before{
+    content:""; display:block; width: 10px; height: 10px;
+    background-image: linear-gradient(135deg,
+      transparent 0 38%, var(--ink-soft) 38% 46%, transparent 46% 58%,
+      var(--ink-soft) 58% 66%, transparent 66% 78%, var(--ink-soft) 78% 86%, transparent 86%);
+    opacity: .3; transition: opacity .2s ease;
+  }
+  .tile:hover .resize-handle::before, .resize-handle:focus-visible::before{ opacity: .85; }
+  .resize-hint{
+    position: absolute; right: 10px; bottom: 30px; z-index: 4;
+    font-family: var(--font-mono); font-size: 0.66rem;
+    background: var(--ink); color: var(--surface);
+    padding: 3px 9px; border-radius: 999px;
+    opacity: 0; transform: translateY(4px);
+    transition: opacity .15s ease, transform .15s ease;
+    pointer-events: none; white-space: nowrap;
+  }
+  [data-theme="dark"] .resize-hint{ background: var(--surface); color: var(--ink); }
+  .resize-hint.show{ opacity: 1; transform: translateY(0); }
+
+  .tile-mini-list{ display:flex; flex-direction:column; gap:6px; }
+  .tile-mini-row{ display:flex; align-items:center; gap:8px; font-size: 0.83rem; }
+  .tile-mini-row input[type="checkbox"]{ width:15px; height:15px; accent-color: var(--moss); cursor:pointer; flex-shrink:0; }
+  .tile-empty{ font-size: 0.83rem; color: var(--ink-soft); margin: 0; }
+  .mini-actions{ display:flex; justify-content:flex-end; gap:14px; margin-top:auto; padding-top: 6px; }
+  .link-btn{ background:none; border:none; color: var(--moss-strong); font-size: 0.76rem; font-weight:600; cursor:pointer; padding:0; font-family: var(--font-body); }
+  .link-btn:hover{ text-decoration: underline; }
+
+  /* ---------- Galleries: Ricette and Bollette as independent card collections ---------- */
+  .gallery-section{ }
+  .gallery-header{ display:flex; align-items:center; gap:10px; margin-bottom: 12px; }
+  .gallery-search{
+    flex:1; font-family: var(--font-body); font-size: 0.84rem; padding: 9px 12px;
+    border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink);
+  }
+  .gallery-add-btn{
+    width: 36px; height: 36px; border-radius: 50%; flex-shrink:0;
+    border: 1px solid var(--moss); background: var(--moss); color: #F7F5EE;
+    font-size: 1.2rem; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .gallery-add-btn:hover{ background: var(--moss-strong); }
+  .gallery-form{
+    max-height: 0; overflow: hidden; opacity: 0;
+    transition: max-height .25s cubic-bezier(.4,0,.2,1), opacity .2s ease;
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm);
+    margin-bottom: 0;
+  }
+  .gallery-form.open{ max-height: 420px; opacity: 1; margin-bottom: 14px; padding: 12px; }
+  .gallery-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 12px; }
+  .gallery-card{
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm);
+    padding: 12px; box-shadow: 0 1px 2px rgba(20,20,15,.03);
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .gallery-card.done{ opacity: .6; }
+  .recipe-card{ cursor: pointer; }
+  .recipe-card:hover{ border-color: var(--clay); }
+  .recipe-card.open{ grid-column: 1 / -1; border-color: var(--clay); }
+  .bolletta-card:hover{ border-color: var(--moss); }
+  .gallery-card-head{ display:flex; align-items:flex-start; gap:8px; }
+  .gallery-card-title{ font-family: var(--font-body); font-weight:600; font-size: 0.88rem; margin:0; flex:1; line-height:1.3; }
+  .gallery-card-sub{ font-size: 0.78rem; color: var(--ink-soft); margin: 5px 0 0; line-height:1.35; }
+  .gallery-card-foot{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top: 9px; }
+  .gallery-card-detail{
+    max-height: 0; overflow: hidden; opacity: 0;
+    transition: max-height .26s cubic-bezier(.4,0,.2,1), opacity .2s ease;
+    font-size: 0.79rem; color: var(--ink-soft); line-height:1.48;
+  }
+  .recipe-card.open .gallery-card-detail{ opacity: 1; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+  .gallery-card-detail b{ color: var(--ink); }
+  .gallery-empty{ font-size: 0.84rem; color: var(--ink-soft); grid-column: 1/-1; }
+  .mini-check{ display:flex; align-items:center; gap:5px; font-size: 0.74rem; color: var(--ink-soft); cursor:pointer; }
+  .mini-check input{ accent-color: var(--moss); cursor:pointer; }
+
+  .section-block{ margin-bottom: 16px; }
+  .section-label{ font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); margin: 0 0 7px; }
+  .list{ display:flex; flex-direction:column; gap:7px; }
+  .row{ display:flex; align-items:center; gap:9px; background: var(--surface); border:1px solid var(--line); border-radius: var(--radius-sm); padding: 8px 10px; transition: background-color .2s ease, border-color .2s ease; }
+  .row.done{ background: transparent; }
+  .row.done .row-title{ text-decoration: line-through; color: var(--ink-soft); transition: color .25s ease; }
+  .row-title{ flex:1; font-size: 0.86rem; transition: color .25s ease; }
+  .row-meta{ font-family: var(--font-mono); font-size: 0.73rem; color: var(--ink-soft); }
+  .chip{ font-family: var(--font-mono); font-size: 0.66rem; padding: 2px 7px; border-radius: 999px; background: var(--moss-tint); color: var(--moss-strong); white-space: nowrap; transition: background-color .25s ease, color .25s ease; }
+  .chip.warn{ background: var(--warn-tint); color: var(--warn); }
+  .icon-x{ border:none; background:none; color: var(--ink-soft); font-size: 0.95rem; cursor:pointer; line-height:1; padding:2px 4px; flex-shrink:0; transition: color .15s ease; }
+  .icon-x:hover{ color: var(--warn); }
+  input[type="checkbox"]{ accent-color: var(--moss); cursor:pointer; }
+
+  .inline-form{ display:flex; gap:8px; margin-top: 4px; flex-wrap: wrap; }
+  .inline-form input, .field input, .field textarea{
+    font-family: var(--font-body); font-size: 0.84rem; padding: 8px 10px;
+    border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink);
+    transition: border-color .15s ease;
+  }
+  .inline-form input{ flex:1; min-width: 120px; }
+  .btn{
+    font-family: var(--font-body); font-weight: 600; font-size: 0.8rem; padding: 8px 14px;
+    border-radius: var(--radius-sm); border: 1px solid var(--moss); background: var(--moss); color: #F7F5EE;
+    cursor: pointer; transition: background-color .15s ease;
+  }
+  .btn:hover{ background: var(--moss-strong); border-color: var(--moss-strong); }
+  .btn.ghost{ background: transparent; color: var(--ink); border-color: var(--line); }
+  .btn.ghost:hover{ border-color: var(--moss); color: var(--moss-strong); }
+  .btn.danger{ background: transparent; color: var(--warn); border-color: var(--warn-tint); }
+  .btn.danger:hover{ background: var(--warn-tint); }
+  .btn.small{ padding: 6px 12px; font-size: 0.76rem; }
+
+  .field{ margin-bottom: 9px; }
+  .field label{ display:block; font-size: 0.74rem; color: var(--ink-soft); margin-bottom: 4px; }
+  .field input, .field textarea{ width:100%; }
+  .field textarea{ resize: vertical; min-height: 54px; }
+
+  .detail-head{ display:flex; align-items:center; gap: 12px; margin-bottom: 20px; }
+  .back-btn{ border:none; background:none; color: var(--ink-soft); font-family: var(--font-mono); font-size: 0.78rem; cursor:pointer; padding: 6px 0; transition: color .15s ease; }
+  .back-btn:hover{ color: var(--moss-strong); }
+  .detail-title{ font-family: var(--font-display); font-size: 1.22rem; margin: 0; }
+  .form-grid{ background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 11px; }
+  .settings-row{ display:flex; align-items:center; justify-content:space-between; gap: 16px; padding: 13px 0; border-bottom: 1px solid var(--line); }
+  .settings-row:last-child{ border-bottom: none; }
+  .settings-text strong{ display:block; font-size: 0.88rem; }
+  .settings-text span{ font-size: 0.78rem; color: var(--ink-soft); }
+  .switch{ position: relative; width: 42px; height: 25px; border-radius: 999px; background: var(--line); border: none; cursor: pointer; flex-shrink:0; transition: background-color .25s ease; }
+  .switch::after{ content:""; position:absolute; top:3px; left:3px; width:19px; height:19px; border-radius:50%; background: var(--surface); transition: left .25s cubic-bezier(.4,0,.2,1); }
+  .switch.on{ background: var(--moss); }
+  .switch.on::after{ left: 20px; }
+  .number-input{ width: 60px; text-align:center; }
+  .note{ font-size: 0.76rem; color: var(--ink-soft); background: var(--surface-soft); border: 1px dashed var(--line); border-radius: var(--radius-sm); padding: 10px 12px; margin-top: 6px; }
+</style>
+</head>
+<body>
+<div class="page-shell">
+  <div class="app">
+
+    <div class="topbar">
+      <div class="brand">Casa<span>·</span>Oggi</div>
+      <div class="topbar-right">
+        <span class="date" id="todayDate"></span>
+        <button class="icon-btn" id="settingsBtn" aria-label="Impostazioni">⚙</button>
+      </div>
+    </div>
+
+    <div class="quick-row" id="quickRow"></div>
+    <div class="santo-carousel" id="santoCarousel">
+      <div id="splidCardHolder" class="carousel-slot"></div>
+      <div id="santoCardHolder" class="carousel-slot"></div>
+      <div class="today-card placeholder" aria-hidden="true">+</div>
+    </div>
+
+    <main id="dashboardView">
+      <div id="dashboardZones"></div>
+    </main>
+
+    <section id="settingsView" class="hidden">
+      <div class="detail-head">
+        <button class="back-btn" id="backBtnSettings">← dashboard</button>
+        <h1 class="detail-title">Impostazioni</h1>
+      </div>
+
+      <div class="section-block">
+        <p class="section-label">Aspetto</p>
+        <div class="form-grid">
+          <div class="settings-row">
+            <div class="settings-text"><strong>Tema scuro</strong><span>Passa dalla carta chiara allo sfondo scuro</span></div>
+            <button class="switch" id="themeSwitch" aria-label="Tema scuro"></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-block">
+        <p class="section-label">Card iniziali</p>
+        <div class="form-grid">
+          <div class="settings-row">
+            <div class="settings-text"><strong>Santo del giorno</strong><span>Mostra la card nel carosello in alto</span></div>
+            <button class="switch" id="cardSantoSwitch" aria-label="Mostra Santo del giorno"></button>
+          </div>
+          <div class="settings-row">
+            <div class="settings-text"><strong>Splid</strong><span>Mostra la card del bilancio nel carosello in alto</span></div>
+            <button class="switch" id="cardSplidSwitch" aria-label="Mostra Splid"></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-block">
+        <p class="section-label">Notifiche</p>
+        <div class="form-grid">
+          <div class="settings-row">
+            <div class="settings-text"><strong>Promemoria bollette</strong><span>Segnala le scadenze entro questo numero di giorni</span></div>
+            <input type="number" min="1" max="30" class="number-input" id="reminderDays" value="5">
+          </div>
+        </div>
+      </div>
+
+      <div class="section-block">
+        <p class="section-label">Splid</p>
+        <div class="form-grid">
+          <div class="field"><label>Codice invito del gruppo</label><input type="text" id="splidCodeInput" placeholder="Es. PWJ E2B P7A"></div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn small" id="splidConnectBtn">Connetti</button>
+            <button class="btn ghost small" id="splidDisconnectBtn">Scollega</button>
+          </div>
+        </div>
+        <p class="note">Integrazione non ufficiale (Splid non ha un'API pubblica): il codice resta solo in questo browser, non viene mai pubblicato da nessuna parte.</p>
+      </div>
+
+      <div class="section-block">
+        <p class="section-label">Dati</p>
+        <div class="form-grid">
+          <div class="settings-row">
+            <div class="settings-text"><strong>Esporta dati</strong><span>Scarica spesa, bollette e ricette in un file JSON</span></div>
+            <button class="btn ghost" id="exportBtn">Esporta</button>
+          </div>
+          <div class="settings-row">
+            <div class="settings-text"><strong>Ripristina dati di esempio</strong><span>Azzera tutto</span></div>
+            <button class="btn danger" id="resetBtn">Ripristina</button>
+          </div>
+        </div>
+        <p class="note">I dati sono salvati nel browser (localStorage), quindi restano anche dopo aver chiuso la pagina su questo stesso dispositivo.</p>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- DEFINITIONS ----------
+  const WATERMARK_SPESA = '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3"><path d="M8 22h48l-6 28a4 4 0 0 1-4 3.4H18A4 4 0 0 1 14 50L8 22Z"/><path d="M20 22 26 8M44 22 38 8" stroke-linecap="round"/><line x1="16" y1="34" x2="48" y2="34" stroke-width="2"/></svg>';
+
+  const SANTO_DEL_GIORNO = {
+    nome: 'San Lanfranco Beccari',
+    ruolo: 'Vescovo di Pavia',
+    img: 'https://www.santodelgiorno.it/foto/santo4306left.jpg',
+    imgAlt: 'https://www.santodelgiorno.it/foto/santo4306small.jpg',
+    link: 'https://www.santodelgiorno.it/san-lanfranco-beccari/',
+    altri: [
+      {nome:'San Giuseppe Cafasso', ruolo:'Sacerdote'},
+      {nome:'Beata Maria di Oignies', ruolo:'Fondatrice delle Beghine'},
+      {nome:"Sant'Eteldreda di Ely", ruolo:'Regina di Northumbria'},
+      {nome:'Santa Agrippina', ruolo:'Vergine e martire'},
+    ],
+  };
+  function santoBlurb(){ return `Scopri la storia e la data di culto di ${SANTO_DEL_GIORNO.nome} sul sito.`; }
+  const SANTO_FALLBACK_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
+    + '<circle cx="32" cy="40" r="16" fill="#F7E4BD"/>'
+    + '<ellipse cx="32" cy="14" rx="13" ry="4.5" fill="none" stroke="#F7E4BD" stroke-width="3"/>'
+    + '<circle cx="26" cy="38" r="2.2" fill="#5B3B12"/><circle cx="38" cy="38" r="2.2" fill="#5B3B12"/>'
+    + '<path d="M25 46c3 3 11 3 14 0" fill="none" stroke="#5B3B12" stroke-width="2" stroke-linecap="round"/>'
+    + '</svg>';
+  const SANTO_FALLBACK_URI = 'data:image/svg+xml;utf8,' + encodeURIComponent(SANTO_FALLBACK_SVG);
+
+  let WEATHER = null;
+  const WEATHER_FALLBACK_LOC = { lat: 41.1171, lon: 16.8719, label: 'Bari' };
+
+  // ---------- Splid (unofficial — Splid has no public API) ----------
+  // Endpoints and headers reverse-engineered from github.com/LinusBolls/splid-js,
+  // reimplemented here directly with fetch() so no bundler/npm step is needed
+  // for a single static HTML file. Whether this works from the browser depends
+  // entirely on whether splid.herokuapp.com sends CORS headers — there's no way
+  // to know for sure without trying it live.
+  const SPLID_BASE = 'https://splid.herokuapp.com';
+  const SPLID_APP_ID = 'AKCaB0FCF0NIigWjxcDBpDYh7q6eN7gYfKxk5QBN';
+  const SPLID_CLIENT_KEY = '4Z29DJvRGdVnB5dcTvDTTG01fbkITxvcPCPOt21M';
+  const SPLID_INSTALLATION_ID = (window.crypto && window.crypto.randomUUID)
+    ? crypto.randomUUID()
+    : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+      });
+
+  function splidHeaders(){
+    return {
+      'x-parse-app-build-version': '182063',
+      'x-parse-app-display-version': '1.8.2',
+      'x-parse-application-id': SPLID_APP_ID,
+      'x-parse-client-key': SPLID_CLIENT_KEY,
+      'x-parse-installation-id': SPLID_INSTALLATION_ID,
+      'X-Parse-Client-Version': 'i1.17.3',
+      'x-parse-os-version': '13',
+      'Content-Type': 'application/json',
+    };
+  }
+  async function splidJoinGroup(rawCode){
+    const code = rawCode.replace(/\s/g, '').toUpperCase();
+    const res = await fetch(SPLID_BASE + '/parse/functions/joinGroupWithAnyCode', {
+      method: 'POST', headers: splidHeaders(), body: JSON.stringify({ code }),
+    });
+    if(!res.ok) throw new Error('join failed: ' + res.status);
+    const data = await res.json();
+    if(!data || !data.result || !data.result.objectId) throw new Error('invalid invite code');
+    return data.result.objectId;
+  }
+  async function splidFindObjects(className, groupId, skip, limit){
+    const res = await fetch(SPLID_BASE + '/parse/functions/findObjects', {
+      method: 'POST', headers: splidHeaders(),
+      body: JSON.stringify({
+        className, group: groupId, skip: skip || 0, limit: limit || 100,
+        minDate: { __type: 'Date', iso: '1969-12-31T00:00:00.000Z' },
+      }),
+    });
+    if(!res.ok) throw new Error('query failed: ' + res.status);
+    const data = await res.json();
+    return (data && data.result && data.result.results) || [];
+  }
+  async function splidGetAll(className, groupId){
+    let all = [], skip = 0;
+    while(true){
+      const batch = await splidFindObjects(className, groupId, skip, 100);
+      all = all.concat(batch);
+      if(batch.length < 100) break;
+      skip += 100;
+    }
+    return all;
+  }
+  function splidGetBalance(people, entries, groupInfo){
+    const defaultCurrency = (groupInfo && groupInfo.defaultCurrencyCode) || 'EUR';
+    const rates = (groupInfo && groupInfo.currencyRates) || {};
+    const balance = {};
+    people.forEach(p => { balance[p.GlobalId] = { payedFor: 0, payedBy: 0 }; });
+    entries.forEach(entry => {
+      if(entry.isDeleted || !balance[entry.primaryPayer]) return;
+      const hasRates = rates[entry.currencyCode] != null && rates[defaultCurrency] != null;
+      const factor = hasRates ? rates[entry.currencyCode] / rates[defaultCurrency] : 1;
+      Object.entries(entry.secondaryPayers || {}).forEach(([id, amount]) => {
+        if(!balance[id]) return;
+        balance[id].payedFor += amount * factor;
+        balance[entry.primaryPayer].payedFor -= amount * factor;
+      });
+      (entry.items || []).forEach(item => {
+        balance[entry.primaryPayer].payedFor += item.AM * factor;
+        Object.entries((item.P && item.P.P) || {}).forEach(([id2, share]) => {
+          if(!balance[id2]) return;
+          balance[id2].payedBy += item.AM * share * factor;
+        });
+      });
+    });
+    Object.values(balance).forEach(b => { b.net = b.payedFor - b.payedBy; });
+    return balance;
+  }
+
+  let splidStatus = 'idle'; // idle | loading | connected | error
+  let splidGroupName = '';
+  let splidBalanceByPerson = []; // [{name, net}]
+  let splidRecent = []; // [{who, what, amount, isPayment}]
+  let splidExpanded = false;
+
+  async function loadSplid(){
+    const code = state.settings.splidCode;
+    if(!code){ splidStatus = 'idle'; renderSplidCard(); return; }
+    splidStatus = 'loading';
+    renderSplidCard();
+    try{
+      const groupId = await splidJoinGroup(code);
+      const [people, entries, groupInfos] = await Promise.all([
+        splidGetAll('Person', groupId),
+        splidGetAll('Entry', groupId),
+        splidFindObjects('GroupInfo', groupId, 0, 1),
+      ]);
+      const livePeople = people.filter(p => !p.isDeleted);
+      const groupInfo = groupInfos[0] || null;
+      const peopleById = {};
+      livePeople.forEach(p => { peopleById[p.GlobalId] = p; });
+
+      const balance = splidGetBalance(livePeople, entries, groupInfo);
+      splidBalanceByPerson = livePeople
+        .map(p => ({ name: p.name, net: (balance[p.GlobalId] && balance[p.GlobalId].net) || 0 }))
+        .sort((a, b) => b.net - a.net);
+
+      splidRecent = entries
+        .filter(e => !e.isDeleted)
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 12)
+        .map(e => {
+          const payer = peopleById[e.primaryPayer];
+          const total = (e.items || []).reduce((s, i) => s + i.AM, 0);
+          return {
+            who: payer ? payer.name : '?',
+            what: e.isPayment ? 'Pagamento' : (e.title || 'Spesa'),
+            amount: total,
+            currency: e.currencyCode || (groupInfo && groupInfo.defaultCurrencyCode) || 'EUR',
+          };
+        });
+
+      splidGroupName = (groupInfo && groupInfo.name) || '';
+      splidStatus = 'connected';
+    } catch(err){
+      splidStatus = 'error';
+    }
+    renderSplidCard();
+  }
+
+  function splidAmountClass(net){ return net > 0.5 ? 'positive' : net < -0.5 ? 'negative' : 'neutral'; }
+
+  function setSplidExpanded(val){
+    splidExpanded = val;
+    const recent = document.getElementById('splidRecent');
+    const hint = document.getElementById('splidHint');
+    if(!recent) return;
+    if(val){ recent.classList.add('open'); recent.style.maxHeight = recent.scrollHeight + 'px'; if(hint) hint.textContent = '▼ Nascondi'; }
+    else { recent.style.maxHeight = '0px'; recent.classList.remove('open'); if(hint) hint.textContent = '▲ Spese recenti'; }
+  }
+
+  function renderSplidCard(){
+    if(!state.settings.cardVisibility.splid){
+      splidCardHolder.innerHTML = '';
+      splidCardHolder.classList.add('empty');
+      return;
+    }
+    splidCardHolder.classList.remove('empty');
+    let body;
+    if(splidStatus === 'idle'){
+      body = `<p class="today-eyebrow">Splid</p>
+        <p class="splid-empty">Collega il tuo gruppo Splid per vedere il bilancio qui.</p>
+        <button class="btn small" data-action="splid-open-settings">Collega</button>`;
+    } else if(splidStatus === 'loading'){
+      body = `<p class="today-eyebrow">Splid</p><p class="splid-empty">Connessione al gruppo…</p>`;
+    } else if(splidStatus === 'error'){
+      body = `<p class="today-eyebrow">Splid</p>
+        <p class="splid-empty">Non riesco a collegarmi: controlla il codice nelle impostazioni, oppure il browser sta bloccando la richiesta.</p>
+        <button class="btn ghost small" data-action="splid-retry">Riprova</button>`;
+    } else {
+      const rows = splidBalanceByPerson.map(p => `
+        <div class="splid-balance-row">
+          <span class="who">${escapeHtml(p.name)}</span>
+          <span class="splid-amount ${splidAmountClass(p.net)}">${p.net > 0 ? '+' : ''}${p.net.toFixed(2)} €</span>
+        </div>`).join('');
+      const recentRows = splidRecent.map(e => `
+        <li class="splid-recent-row">
+          <span class="who">${escapeHtml(e.who)}</span>
+          <span class="what">${escapeHtml(e.what)}</span>
+          <span>${e.amount.toFixed(2)} ${escapeHtml(e.currency)}</span>
+        </li>`).join('') || '<li class="splid-recent-row"><span class="what">Nessuna spesa registrata.</span></li>';
+      body = `
+        <p class="today-eyebrow">${escapeHtml(splidGroupName || 'Splid')} · bilancio</p>
+        <div class="splid-balance-list">${rows || '<p class="splid-empty">Nessun membro nel gruppo.</p>'}</div>
+        <button class="splid-swipe-hint" id="splidHint" data-action="splid-toggle">▲ Spese recenti</button>
+        <div class="splid-recent" id="splidRecent">
+          <ul class="splid-recent-list">${recentRows}</ul>
+        </div>`;
+    }
+    splidCardHolder.innerHTML = `<div class="today-card splid-card" id="splidCardInner">${body}</div>`;
+  }
+
+  // swipe up/down on the card to reveal/hide recent expenses (works with touch and mouse drag)
+  function setupSplidSwipe(){
+    let tracking = false, startY = 0;
+    splidCardHolder.addEventListener('pointerdown', e => {
+      if(e.target.closest('[data-action]') || splidStatus !== 'connected') return;
+      tracking = true; startY = e.clientY;
+    });
+    window.addEventListener('pointerup', e => {
+      if(!tracking) return;
+      tracking = false;
+      const dy = startY - e.clientY;
+      if(dy > 28) setSplidExpanded(true);
+      else if(dy < -28) setSplidExpanded(false);
+    });
+  }
+
+  const BIN_COLORS = {
+    umido: { label:'Umido', color:'#8B5E3C' },
+    indifferenziato: { label:'Indifferenziato', color:'#6E6E66' },
+    carta: { label:'Carta', color:'#2F6FB0' },
+    vetro: { label:'Vetro', color:'#3F7D52' },
+    plastica: { label:'Plastica', color:'#D99A1E' },
+  };
+  const TRASH_SCHEDULE = {
+    0: ['umido'], 1: ['umido'], 2: ['indifferenziato'], 3: ['carta'],
+    4: ['umido','vetro'], 5: ['plastica'], 6: [],
+  };
+
+  const initialState = () => ({
+    settings: { theme: 'light', reminderDays: 5, splidCode: '', cardVisibility: { santo: true, splid: true } },
+    layout: { cucina: ['spesa'] },
+    sizes: { spesa: 'sm' },
+    spesa: [
+      {id:1, nome:'Latte di soia', comprato:false},
+      {id:2, nome:'Uova', comprato:false},
+      {id:3, nome:'Pane integrale', comprato:true},
+      {id:4, nome:'Ceci in scatola', comprato:false},
+    ],
+    bollette: [
+      {id:1, nome:'Enel · Luce', importo:64.30, scadenza:'2026-06-25', pagata:false},
+      {id:2, nome:'TIM · Internet', importo:29.90, scadenza:'2026-07-02', pagata:false},
+      {id:3, nome:'Condominio', importo:120.00, scadenza:'2026-06-20', pagata:false},
+    ],
+    ricette: [
+      {id:1, titolo:'Parmigiana di melanzane',
+        ingredienti:"Melanzane, passata di pomodoro, mozzarella, parmigiano, basilico, olio d'oliva",
+        preparazione:'Affetta e griglia le melanzane, alterna gli strati con sugo e formaggi, cuoci in forno a 190° per 30 minuti.'},
+      {id:2, titolo:'Pasta e ceci',
+        ingredienti:'Pasta corta, ceci, aglio, rosmarino, passata di pomodoro, olio, peperoncino',
+        preparazione:'Soffriggi aglio e rosmarino, aggiungi i ceci e il pomodoro, cuoci la pasta direttamente nel sugo allungato con acqua.'},
+    ],
+  });
+
+  // ---------- persistence (localStorage) ----------
+  const STORAGE_KEY = 'casa-oggi-v2';
+  function saveState(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+    catch(err){ /* storage full or unavailable: nothing else to do */ }
+  }
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return null;
+      const parsed = JSON.parse(raw);
+      if(!parsed || !parsed.spesa || !parsed.bollette || !parsed.ricette) return null;
+      return parsed;
+    } catch(err){ return null; }
+  }
+
+  let state = loadState() || initialState();
+  state.settings.cardVisibility = state.settings.cardVisibility || { santo: true, splid: true };
+  if(state.settings.splidCode === undefined) state.settings.splidCode = '';
+  let nextId = {
+    spesa: Math.max(0, ...state.spesa.map(i => i.id)) + 1,
+    bollette: Math.max(0, ...state.bollette.map(i => i.id)) + 1,
+    ricette: Math.max(0, ...state.ricette.map(i => i.id)) + 1,
+  };
+  let ricetteSearch = '';
+  let bolletteSearch = '';
+
+  // ---------- DOM refs ----------
+  const dashboardView = document.getElementById('dashboardView');
+  const settingsView = document.getElementById('settingsView');
+  const zonesContainer = document.getElementById('dashboardZones');
+  const settingsBtn = document.getElementById('settingsBtn');
+  const quickRow = document.getElementById('quickRow');
+  const santoCarousel = document.getElementById('santoCarousel');
+  const splidCardHolder = document.getElementById('splidCardHolder');
+  const santoCardHolder = document.getElementById('santoCardHolder');
+
+  // ---------- helpers ----------
+  function fmtEuro(n){ return n.toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €'; }
+  function fmtDate(iso){ const d = new Date(iso + 'T00:00:00'); return d.toLocaleDateString('it-IT', {day:'numeric', month:'short'}); }
+  function daysUntil(iso){ const d = new Date(iso + 'T00:00:00'); const today = new Date(); today.setHours(0,0,0,0); return Math.round((d - today) / 86400000); }
+  function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function truncate(s, n){ return s.length > n ? s.slice(0, n - 1) + '…' : s; }
+  function playEnter(el){ el.classList.remove('view-enter'); void el.offsetWidth; el.classList.add('view-enter'); }
+  function isNarrowViewport(){ return window.innerWidth <= 680; }
+  function searchTerms(raw){ return raw.split(';').map(t => t.trim().toLowerCase()).filter(Boolean); }
+  function weatherIcon(code){
+    if(code === 0) return '☀️';
+    if(code === 1) return '🌤️';
+    if(code === 2 || code === 3) return '☁️';
+    if(code === 45 || code === 48) return '🌫️';
+    if([51,53,55,56,57].includes(code)) return '🌦️';
+    if([61,63,65,66,67,80,81,82].includes(code)) return '🌧️';
+    if([71,73,75,77,85,86].includes(code)) return '🌨️';
+    if([95,96,99].includes(code)) return '⛈️';
+    return '🌡️';
+  }
+  function binChips(ids){
+    if(!ids.length) return '<span class="bin-chip" style="background:#B5B0A3;">Nessuna raccolta</span>';
+    return ids.map(id => {
+      const b = BIN_COLORS[id];
+      return `<span class="bin-chip" style="background:${b.color};"><span class="bin-dot"></span>${b.label}</span>`;
+    }).join('');
+  }
+
+  document.getElementById('todayDate').textContent =
+    new Date().toLocaleDateString('it-IT', {weekday:'long', day:'numeric', month:'long'});
+
+  // ---------- quick row: Meteo + Rifiuti as two small independent cards ----------
+  function renderQuickRow(){
+    const now = new Date();
+    const todayIdx = now.getDay();
+    const tomorrowIdx = (todayIdx + 1) % 7;
+    const weatherHtml = WEATHER
+      ? `<span class="weather-icon">${weatherIcon(WEATHER.code)}</span><span class="weather-temp">${WEATHER.temp}°</span>${WEATHER.label ? `<span class="weather-place">${escapeHtml(WEATHER.label)}</span>` : ''}`
+      : `<span class="weather-icon">🌡️</span><span class="weather-place">Meteo…</span>`;
+    quickRow.innerHTML = `
+      <div class="today-card meteo">
+        <p class="today-eyebrow">Meteo</p>
+        <div class="weather-row">${weatherHtml}</div>
+      </div>
+      <div class="today-card rifiuti-card">
+        <p class="today-eyebrow">Rifiuti</p>
+        <div class="rifiuti-row"><span class="rifiuti-label">Oggi</span>${binChips(TRASH_SCHEDULE[todayIdx])}</div>
+        <div class="rifiuti-row"><span class="rifiuti-label">Domani</span>${binChips(TRASH_SCHEDULE[tomorrowIdx])}</div>
+      </div>`;
+  }
+
+  // ---------- santo del giorno: its own slot in the carousel ----------
+  function renderSantoCarousel(){
+    if(!state.settings.cardVisibility.santo){
+      santoCardHolder.innerHTML = '';
+      santoCardHolder.classList.add('empty');
+      return;
+    }
+    santoCardHolder.classList.remove('empty');
+    const extraHtml = (SANTO_DEL_GIORNO.altri && SANTO_DEL_GIORNO.altri.length)
+      ? `<div class="santo-extra">
+           <p class="santo-extra-label">Altri santi di oggi</p>
+           <ul class="santo-extra-list">${SANTO_DEL_GIORNO.altri.map(s => `<li><b>${escapeHtml(s.nome)}</b> · ${escapeHtml(s.ruolo)}</li>`).join('')}</ul>
+         </div>` : '';
+    santoCardHolder.innerHTML = `
+      <div class="today-card santo">
+        <div class="santo-photo"><img class="santo-img" id="santoImg" referrerpolicy="no-referrer" alt="${escapeHtml(SANTO_DEL_GIORNO.nome)}"></div>
+        <div class="santo-info">
+          <p class="today-eyebrow">Santo del giorno</p>
+          <p class="santo-name">${escapeHtml(SANTO_DEL_GIORNO.nome)}</p>
+          <p class="santo-role">${escapeHtml(SANTO_DEL_GIORNO.ruolo)}</p>
+          <p class="santo-blurb">${escapeHtml(santoBlurb())}</p>
+          <a class="santo-link" href="${SANTO_DEL_GIORNO.link}" target="_blank" rel="noopener">Leggi su santodelgiorno.it →</a>
+          ${extraHtml}
+        </div>
+      </div>`;
+
+    const img = document.getElementById('santoImg');
+    let stage = 0;
+    img.addEventListener('error', () => {
+      stage += 1;
+      if(stage === 1 && SANTO_DEL_GIORNO.imgAlt) img.src = SANTO_DEL_GIORNO.imgAlt;
+      else { img.src = SANTO_FALLBACK_URI; img.classList.add('fallback'); }
+    });
+    img.src = SANTO_DEL_GIORNO.img;
+  }
+
+  async function refreshSantoDelGiorno(){
+    try{
+      const target = 'https://www.santodelgiorno.it/';
+      const proxied = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(target);
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 7000);
+      const res = await fetch(proxied, {signal: controller.signal});
+      clearTimeout(timer);
+      if(!res.ok) return;
+      const html = await res.text();
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const img = doc.querySelector('img[src*="/foto/santo"]');
+      if(!img) return;
+      const name = (img.getAttribute('alt') || '').trim();
+      const rawSrc = img.getAttribute('src') || '';
+      if(!name || !rawSrc) return;
+      const absoluteSrc = rawSrc.startsWith('http') ? rawSrc : new URL(rawSrc, target).href;
+      const altSrc = absoluteSrc.includes('small') ? absoluteSrc.replace('small','left') : absoluteSrc.replace('left','small');
+
+      let role = '';
+      const container = img.closest('div') || img.parentElement;
+      const roleEl = container && container.querySelector('em, i');
+      if(roleEl) role = roleEl.textContent.trim();
+
+      let link = SANTO_DEL_GIORNO.link;
+      const continuaLink = Array.from(doc.querySelectorAll('a')).find(a => /continua/i.test(a.textContent));
+      if(continuaLink && continuaLink.href) link = continuaLink.href;
+
+      const denylist = /^(preghiere|contatti|donazione|privacy|cookie|termini-d-uso|aggiungialtuosito|bibliografia|nati|morti|santi|ricorrenze|informativa-sulluso-dei-cookie)$/;
+      const seen = new Set([link]);
+      const altri = [];
+      Array.from(doc.querySelectorAll('a[href]')).forEach(a => {
+        if(altri.length >= 5) return;
+        const href = a.getAttribute('href') || '';
+        const m = href.match(/^https:\/\/www\.santodelgiorno\.it\/([a-z][a-z0-9-]*)\/$/);
+        if(!m || denylist.test(m[1]) || seen.has(href)) return;
+        const altName = a.textContent.trim();
+        if(!altName || altName.length > 60 || /continua|agiografia/i.test(altName)) return;
+        let altRole = '';
+        let sib = a.nextElementSibling;
+        for(let i = 0; i < 3 && sib; i++, sib = sib.nextElementSibling){
+          if(sib.matches && sib.matches('em, i')){ altRole = sib.textContent.trim(); break; }
+        }
+        if(!altRole){
+          const parent = a.closest('div');
+          const em = parent && parent.querySelector('em, i');
+          if(em) altRole = em.textContent.trim();
+        }
+        if(!altRole) return;
+        seen.add(href);
+        altri.push({nome: altName, ruolo: altRole});
+      });
+
+      SANTO_DEL_GIORNO.nome = name;
+      if(role) SANTO_DEL_GIORNO.ruolo = role;
+      SANTO_DEL_GIORNO.img = absoluteSrc;
+      SANTO_DEL_GIORNO.imgAlt = altSrc;
+      SANTO_DEL_GIORNO.link = link;
+      if(altri.length) SANTO_DEL_GIORNO.altri = altri;
+      renderSantoCarousel();
+    } catch(err){ /* keep showing the seeded data */ }
+  }
+
+  // ---------- outdoor temperature: Open-Meteo, free, no key, CORS-friendly ----------
+  function getLocation(){
+    return new Promise(resolve => {
+      if(!navigator.geolocation){ resolve(WEATHER_FALLBACK_LOC); return; }
+      navigator.geolocation.getCurrentPosition(
+        pos => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude, label: null }),
+        () => resolve(WEATHER_FALLBACK_LOC),
+        { timeout: 6000 }
+      );
+    });
+  }
+  async function reverseGeocode(lat, lon){
+    try{
+      const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=it`);
+      if(!res.ok) return null;
+      const data = await res.json();
+      return data.city || data.locality || null;
+    } catch(err){ return null; }
+  }
+  async function loadWeather(){
+    try{
+      const loc = await getLocation();
+      const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=temperature_2m,weather_code&timezone=auto`);
+      if(!res.ok) return;
+      const data = await res.json();
+      let label = loc.label;
+      if(!label) label = await reverseGeocode(loc.lat, loc.lon);
+      WEATHER = { temp: Math.round(data.current.temperature_2m), code: data.current.weather_code, label: label };
+      renderQuickRow();
+    } catch(err){ /* card just keeps showing "Meteo…" */ }
+  }
+
+  // ---------- drag-to-scroll for the santo carousel (mouse only; touch swipes natively) ----------
+  (function setupCarouselScroll(){
+    let dragging = false, startX = 0, startScroll = 0;
+    santoCarousel.addEventListener('pointerdown', e => {
+      if(e.pointerType !== 'mouse') return;
+      dragging = true; startX = e.clientX; startScroll = santoCarousel.scrollLeft;
+      santoCarousel.classList.add('grabbing');
+    });
+    window.addEventListener('pointermove', e => {
+      if(!dragging) return;
+      santoCarousel.scrollLeft = startScroll - (e.clientX - startX);
+    });
+    window.addEventListener('pointerup', () => { dragging = false; santoCarousel.classList.remove('grabbing'); });
+    santoCarousel.addEventListener('wheel', e => {
+      if(Math.abs(e.deltaY) > Math.abs(e.deltaX)){ santoCarousel.scrollLeft += e.deltaY; e.preventDefault(); }
+    }, {passive:false});
+  })();
+
+  // ---------- view switching ----------
+  function showDashboard(){
+    dashboardView.classList.remove('hidden');
+    settingsView.classList.add('hidden');
+    settingsBtn.classList.remove('open');
+    renderDashboard();
+    playEnter(dashboardView);
+  }
+  function showSettings(){
+    dashboardView.classList.add('hidden');
+    settingsView.classList.remove('hidden');
+    settingsBtn.classList.add('open');
+    playEnter(settingsView);
+  }
+  settingsBtn.addEventListener('click', () => {
+    if(settingsView.classList.contains('hidden')) showSettings();
+    else showDashboard();
+  });
+  document.getElementById('backBtnSettings').addEventListener('click', showDashboard);
+
+  // ---------- Spesa tile (kept exactly as before: a draggable, resizable tile) ----------
+  function computeTag(tileId){
+    if(tileId === 'spesa') return state.spesa.filter(i => !i.comprato).length + ' da prendere';
+    return '';
+  }
+  function spesaBody(size){
+    const pending = state.spesa.filter(i => !i.comprato);
+    if(size === 'sm'){
+      const preview = pending.slice(0, 3);
+      let rows = preview.map(i => `
+        <label class="tile-mini-row">
+          <input type="checkbox" data-action="spesa-toggle" data-id="${i.id}">
+          ${escapeHtml(i.nome)}
+        </label>`).join('');
+      if(!preview.length) rows = '<p class="tile-empty">Nessun articolo da comprare.</p>';
+      const more = pending.length > 3 ? `<p class="tile-empty">+${pending.length - 3} altri</p>` : '';
+      return `<div class="tile-mini-list">${rows}${more}</div>
+        <div class="mini-actions"><button class="link-btn" data-action="toggle-size" data-tile="spesa">Apri lista →</button></div>`;
+    }
+    const rows = state.spesa.map(i => `
+      <div class="row ${i.comprato ? 'done' : ''}" data-id="${i.id}">
+        <input type="checkbox" data-action="spesa-toggle" data-id="${i.id}" ${i.comprato ? 'checked' : ''} aria-label="Comprato">
+        <span class="row-title">${escapeHtml(i.nome)}</span>
+        <button class="icon-x" data-action="spesa-del" data-id="${i.id}" aria-label="Rimuovi">×</button>
+      </div>`).join('') || '<p class="tile-empty">Lista vuota.</p>';
+    return `
+      <div class="section-block">
+        <p class="section-label">Lista (${state.spesa.length})</p>
+        <div class="list">${rows}</div>
+      </div>
+      <form class="inline-form" id="spesaForm">
+        <input type="text" id="spesaInput" placeholder="Aggiungi un articolo…" autocomplete="off">
+        <button class="btn small" type="submit">Aggiungi</button>
+      </form>
+      <div><button class="btn ghost small" data-action="spesa-clear">Svuota comprati</button></div>`;
+  }
+  function renderTile(tileId, zoneTileCount){
+    const size = state.sizes[tileId];
+    const tag = computeTag(tileId);
+    const body = spesaBody(size);
+    const colSpan = zoneTileCount === 1 ? '1 / -1' : (size === 'lg' ? 'span 2' : 'span 1');
+    const rowSpan = size === 'lg' ? 'span 2' : 'span 1';
+    return `<article class="tile" data-tile="${tileId}" data-size="${size}" style="grid-column:${colSpan}; grid-row:${rowSpan};">
+      <div class="tile-watermark" aria-hidden="true">${WATERMARK_SPESA}</div>
+      <div class="tile-head">
+        <span class="grip" aria-hidden="true">⠿</span>
+        <span class="tile-title">Spesa</span>
+        <span class="tile-tag">${tag}</span>
+      </div>
+      <div class="tile-body">${body}</div>
+      <div class="resize-handle" data-action="resize" data-tile="${tileId}" tabindex="0" role="button" aria-label="Ridimensiona riquadro"></div>
+      <span class="resize-hint" aria-hidden="true"></span>
+    </article>`;
+  }
+
+  // ---------- Ricette gallery: independent cards, search (";" separated), add ----------
+  let ricetteFormOpen = false;
+  function ricetteCardsHtml(){
+    const terms = searchTerms(ricetteSearch);
+    const filtered = state.ricette.filter(r => {
+      if(!terms.length) return true;
+      const hay = (r.titolo + ' ' + r.ingredienti).toLowerCase();
+      return terms.some(t => hay.includes(t));
+    });
+    return filtered.map(r => `
+      <article class="gallery-card recipe-card" data-id="${r.id}">
+        <div class="gallery-card-head">
+          <h3 class="gallery-card-title">${escapeHtml(r.titolo)}</h3>
+          <button class="icon-x" data-action="ricetta-del" data-id="${r.id}" aria-label="Rimuovi">×</button>
+        </div>
+        <p class="gallery-card-sub">${escapeHtml(truncate(r.ingredienti, 60))}</p>
+        <div class="gallery-card-detail">
+          <p><b>Ingredienti</b><br>${escapeHtml(r.ingredienti)}</p>
+          <p><b>Preparazione</b><br>${escapeHtml(r.preparazione)}</p>
+        </div>
+      </article>`).join('') || '<p class="gallery-empty">Nessuna ricetta trovata.</p>';
+  }
+  function renderRicetteGallery(){
+    return `
+      <div class="gallery-section" data-gallery="ricette">
+        <div class="gallery-header">
+          <input type="text" class="gallery-search" id="ricetteSearch" placeholder="Cerca ricette… più termini con ;" value="${escapeHtml(ricetteSearch)}">
+          <button class="gallery-add-btn" data-action="ricetta-form-toggle" aria-label="Aggiungi ricetta">+</button>
+        </div>
+        <div class="gallery-form ${ricetteFormOpen ? 'open' : ''}" id="ricetteForm">
+          <div class="field"><label>Titolo</label><input type="text" id="rTitolo" placeholder="Es. Risotto allo zafferano"></div>
+          <div class="field"><label>Ingredienti</label><textarea id="rIngredienti" placeholder="Elenca gli ingredienti…"></textarea></div>
+          <div class="field"><label>Preparazione</label><textarea id="rPreparazione" placeholder="Descrivi i passaggi…"></textarea></div>
+          <button class="btn small" data-action="ricetta-add">Salva ricetta</button>
+        </div>
+        <div class="gallery-grid">${ricetteCardsHtml()}</div>
+      </div>`;
+  }
+  function refreshRicetteGrid(){
+    const grid = zonesContainer.querySelector('[data-gallery="ricette"] .gallery-grid');
+    if(grid) grid.innerHTML = ricetteCardsHtml();
+    saveState();
+  }
+
+  // ---------- Bollette gallery: same pattern as ricette ----------
+  let bolletteFormOpen = false;
+  function bolletteCardsHtml(){
+    const terms = searchTerms(bolletteSearch);
+    const sorted = [...state.bollette].sort((a, b) => new Date(a.scadenza) - new Date(b.scadenza));
+    const filtered = sorted.filter(b => !terms.length || terms.some(t => b.nome.toLowerCase().includes(t)));
+    return filtered.map(b => {
+      const dleft = daysUntil(b.scadenza);
+      let chip = '<span class="chip">pagata</span>';
+      if(!b.pagata){
+        chip = dleft < 0 ? '<span class="chip warn">scaduta</span>'
+          : dleft <= state.settings.reminderDays ? `<span class="chip warn">tra ${dleft}g</span>`
+          : `<span class="chip">tra ${dleft}g</span>`;
+      }
+      return `
+      <article class="gallery-card bolletta-card ${b.pagata ? 'done' : ''}" data-id="${b.id}">
+        <div class="gallery-card-head">
+          <h3 class="gallery-card-title">${escapeHtml(b.nome)}</h3>
+          <button class="icon-x" data-action="bolletta-del" data-id="${b.id}" aria-label="Rimuovi">×</button>
+        </div>
+        <p class="gallery-card-sub">${fmtDate(b.scadenza)} · ${fmtEuro(b.importo)}</p>
+        <div class="gallery-card-foot">
+          ${chip}
+          <label class="mini-check"><input type="checkbox" data-action="bolletta-check" data-id="${b.id}" ${b.pagata ? 'checked' : ''}> pagata</label>
+        </div>
+      </article>`;
+    }).join('') || '<p class="gallery-empty">Nessuna bolletta trovata.</p>';
+  }
+  function renderBolletteGallery(){
+    return `
+      <div class="gallery-section" data-gallery="bollette">
+        <div class="gallery-header">
+          <input type="text" class="gallery-search" id="bolletteSearch" placeholder="Cerca bollette… più termini con ;" value="${escapeHtml(bolletteSearch)}">
+          <button class="gallery-add-btn" data-action="bolletta-form-toggle" aria-label="Aggiungi bolletta">+</button>
+        </div>
+        <div class="gallery-form ${bolletteFormOpen ? 'open' : ''}" id="bolletteForm">
+          <div class="field"><label>Nome</label><input type="text" id="bNome" placeholder="Es. Gas"></div>
+          <div class="field"><label>Importo (€)</label><input type="number" min="0" step="0.01" id="bImporto" placeholder="0.00"></div>
+          <div class="field"><label>Scadenza</label><input type="date" id="bScadenza"></div>
+          <button class="btn small" data-action="bolletta-add">Aggiungi</button>
+        </div>
+        <div class="gallery-grid">${bolletteCardsHtml()}</div>
+      </div>`;
+  }
+  function refreshBolletteGrid(){
+    const grid = zonesContainer.querySelector('[data-gallery="bollette"] .gallery-grid');
+    if(grid) grid.innerHTML = bolletteCardsHtml();
+    saveState();
+  }
+
+  // ---------- main render ----------
+  function renderDashboard(){
+    const cucinaTiles = state.layout.cucina.map(tid => renderTile(tid, state.layout.cucina.length)).join('');
+    zonesContainer.innerHTML = `
+      <section class="zone cucina">
+        <div class="zone-head"><p class="zone-title">Cucina</p><p class="zone-sub">Spesa e ricette</p></div>
+        <div class="zone-grid" data-zone-grid="cucina">${cucinaTiles}</div>
+        ${renderRicetteGallery()}
+      </section>
+      <section class="zone gestione">
+        <div class="zone-head"><p class="zone-title">Gestione casa</p><p class="zone-sub">Bollette e scadenze</p></div>
+        ${renderBolletteGallery()}
+      </section>`;
+    saveState();
+  }
+
+  function flipRenderDashboard(){
+    const oldTiles = Array.from(zonesContainer.querySelectorAll('.tile'));
+    const oldRects = new Map();
+    oldTiles.forEach(t => oldRects.set(t.dataset.tile, t.getBoundingClientRect()));
+    renderDashboard();
+    Array.from(zonesContainer.querySelectorAll('.tile')).forEach(t => {
+      const oldRect = oldRects.get(t.dataset.tile);
+      if(!oldRect) return;
+      const newRect = t.getBoundingClientRect();
+      const dx = oldRect.left - newRect.left, dy = oldRect.top - newRect.top;
+      const sameSize = Math.abs(oldRect.width - newRect.width) < 0.5 && Math.abs(oldRect.height - newRect.height) < 0.5;
+      const samePos = Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5;
+      if(sameSize && samePos) return;
+      t.style.transition = 'none'; t.style.transformOrigin = 'top left';
+      t.style.width = oldRect.width + 'px'; t.style.height = oldRect.height + 'px';
+      t.style.transform = `translate(${dx}px, ${dy}px)`;
+      requestAnimationFrame(() => {
+        t.style.transition = 'transform .3s cubic-bezier(.4,0,.2,1), width .3s cubic-bezier(.4,0,.2,1), height .3s cubic-bezier(.4,0,.2,1)';
+        t.style.transform = ''; t.style.width = ''; t.style.height = '';
+        const cleanup = () => { t.style.transition = ''; t.removeEventListener('transitionend', cleanup); };
+        t.addEventListener('transitionend', cleanup);
+      });
+    });
+  }
+
+  function liveResizeTile(tile, tileId, newLg, grid){
+    const tiles = Array.from(grid.querySelectorAll('.tile'));
+    const oldRects = new Map();
+    tiles.forEach(t => oldRects.set(t, t.getBoundingClientRect()));
+    state.sizes[tileId] = newLg ? 'lg' : 'sm';
+    const colSpan = tiles.length === 1 ? '1 / -1' : (newLg ? 'span 2' : 'span 1');
+    tile.style.gridColumn = colSpan;
+    tile.style.gridRow = newLg ? 'span 2' : 'span 1';
+    tile.dataset.size = newLg ? 'lg' : 'sm';
+    const body = tile.querySelector('.tile-body');
+    body.innerHTML = spesaBody(newLg ? 'lg' : 'sm');
+    body.style.animation = 'none'; void body.offsetWidth; body.style.animation = '';
+    saveState();
+    const DUR = .22, ease = 'cubic-bezier(.4,0,.2,1)';
+    tiles.forEach(t => {
+      const oldRect = oldRects.get(t);
+      const newRect = t.getBoundingClientRect();
+      const dx = oldRect.left - newRect.left, dy = oldRect.top - newRect.top;
+      const sameSize = Math.abs(oldRect.width - newRect.width) < 0.5 && Math.abs(oldRect.height - newRect.height) < 0.5;
+      const samePos = Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5;
+      if(sameSize && samePos) return;
+      const isSource = t === tile;
+      t.style.zIndex = isSource ? '1' : '2';
+      t.style.transition = 'none'; t.style.transformOrigin = 'top left';
+      t.style.width = oldRect.width + 'px'; t.style.height = oldRect.height + 'px';
+      t.style.transform = `translate(${dx}px, ${dy}px)`;
+      requestAnimationFrame(() => {
+        t.style.transition = `transform ${DUR}s ${ease}, width ${DUR}s ${ease}, height ${DUR}s ${ease}`;
+        t.style.transform = ''; t.style.width = ''; t.style.height = '';
+        const cleanup = () => { t.style.transition = ''; t.style.zIndex = ''; t.removeEventListener('transitionend', cleanup); };
+        t.addEventListener('transitionend', cleanup);
+      });
+    });
+  }
+
+  function persistLayoutFromDOM(){
+    zonesContainer.querySelectorAll('[data-zone-grid]').forEach(grid => {
+      const zoneId = grid.dataset.zoneGrid;
+      state.layout[zoneId] = Array.from(grid.children).map(t => t.dataset.tile);
+    });
+  }
+
+  function reorderWithFlip(grid, performMove, skipNode){
+    const rects = new Map();
+    Array.from(grid.children).forEach(node => rects.set(node, node.getBoundingClientRect()));
+    performMove();
+    Array.from(grid.children).forEach(node => {
+      if(node === skipNode) return;
+      const oldRect = rects.get(node);
+      if(!oldRect) return;
+      const newRect = node.getBoundingClientRect();
+      const dx = oldRect.left - newRect.left, dy = oldRect.top - newRect.top;
+      if(Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
+      node.style.transition = 'none';
+      node.style.transform = `translate(${dx}px, ${dy}px)`;
+      requestAnimationFrame(() => { node.style.transition = 'transform .22s ease'; node.style.transform = ''; });
+    });
+  }
+
+  // ---------- drag reorder (kept for when more tiles are added later) ----------
+  zonesContainer.addEventListener('pointerdown', e => {
+    const grip = e.target.closest('.grip');
+    if(!grip) return;
+    const tile = grip.closest('.tile');
+    const grid = tile.parentElement;
+    e.preventDefault();
+    const rect = tile.getBoundingClientRect();
+    const offX = e.clientX - rect.left, offY = e.clientY - rect.top;
+    const startX = e.clientX, startY = e.clientY;
+    let moved = false;
+    const placeholder = document.createElement('div');
+    placeholder.className = 'tile-placeholder';
+    placeholder.style.gridColumn = tile.style.gridColumn;
+    placeholder.style.gridRow = tile.style.gridRow;
+    grid.insertBefore(placeholder, tile);
+    tile.classList.add('dragging-free');
+    tile.style.position = 'fixed';
+    tile.style.left = rect.left + 'px'; tile.style.top = rect.top + 'px';
+    tile.style.width = rect.width + 'px'; tile.style.height = rect.height + 'px';
+    tile.style.margin = '0'; tile.style.zIndex = '60'; tile.style.pointerEvents = 'none';
+    document.body.appendChild(tile);
+
+    function onMove(ev){
+      if(Math.abs(ev.clientX - startX) > 3 || Math.abs(ev.clientY - startY) > 3) moved = true;
+      tile.style.left = (ev.clientX - offX) + 'px';
+      tile.style.top = (ev.clientY - offY) + 'px';
+      const target = document.elementFromPoint(ev.clientX, ev.clientY);
+      const overGrid = target && target.closest('[data-zone-grid]');
+      if(!overGrid || overGrid !== grid) return;
+      const overTile = target.closest('.tile, .tile-placeholder');
+      if(!overTile || overTile === placeholder) return;
+      const placeholderIsAfter = !!(overTile.compareDocumentPosition(placeholder) & Node.DOCUMENT_POSITION_FOLLOWING);
+      reorderWithFlip(grid, () => {
+        if(placeholderIsAfter) grid.insertBefore(placeholder, overTile);
+        else grid.insertBefore(placeholder, overTile.nextSibling);
+      }, null);
+    }
+    function onUp(){
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      const lastRect = tile.getBoundingClientRect();
+      placeholder.replaceWith(tile);
+      tile.classList.remove('dragging-free');
+      tile.style.position = ''; tile.style.left = ''; tile.style.top = ''; tile.style.margin = ''; tile.style.pointerEvents = '';
+      const newRect = tile.getBoundingClientRect();
+      const dx = lastRect.left - newRect.left, dy = lastRect.top - newRect.top;
+      tile.style.zIndex = '3'; tile.style.transition = 'none'; tile.style.transformOrigin = 'top left';
+      tile.style.width = lastRect.width + 'px'; tile.style.height = lastRect.height + 'px';
+      tile.style.transform = `translate(${dx}px, ${dy}px)`;
+      requestAnimationFrame(() => {
+        tile.style.transition = 'transform .24s cubic-bezier(.4,0,.2,1), width .24s cubic-bezier(.4,0,.2,1), height .24s cubic-bezier(.4,0,.2,1)';
+        tile.style.transform = ''; tile.style.width = ''; tile.style.height = '';
+        const cleanup = () => { tile.style.transition = ''; tile.style.zIndex = ''; tile.removeEventListener('transitionend', cleanup); };
+        tile.addEventListener('transitionend', cleanup);
+      });
+      if(moved) persistLayoutFromDOM();
+    }
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+  });
+
+  // ---------- resize handle: live, in place, no overlap (kept from before) ----------
+  function setupResize(handle){
+    const tile = handle.closest('.tile');
+    const tileId = tile.dataset.tile;
+    const hint = tile.querySelector('.resize-hint');
+    function showHint(text){ hint.textContent = text; hint.classList.add('show'); }
+    function hideHint(){ hint.classList.remove('show'); }
+    function start(e){
+      e.preventDefault();
+      const grid = tile.parentElement;
+      const zoneTileCount = grid.children.length;
+      const canGrowWidth = zoneTileCount > 1 && !isNarrowViewport();
+      const rect = tile.getBoundingClientRect();
+      const refW = canGrowWidth ? rect.width : 0;
+      const refH = rect.height;
+      const startX = e.clientX, startY = e.clientY;
+      let moved = false;
+      let liveLg = state.sizes[tileId] === 'lg';
+      tile.classList.add('resizing');
+      showHint(liveLg ? 'Espanso' : 'Compatto');
+      function onMove(ev){
+        const dx = Math.max(0, ev.clientX - startX);
+        const dy = Math.max(0, ev.clientY - startY);
+        if(dx > 3 || dy > 3) moved = true;
+        const ratio = canGrowWidth ? Math.max(dx / refW, dy / refH) : (dy / refH);
+        const wantLg = ratio > 0.4;
+        if(wantLg !== liveLg){
+          liveLg = wantLg;
+          liveResizeTile(tile, tileId, liveLg, tile.parentElement);
+          showHint(liveLg ? 'Espanso' : 'Compatto');
+        }
+      }
+      function onUp(){
+        document.removeEventListener('pointermove', onMove);
+        document.removeEventListener('pointerup', onUp);
+        tile.classList.remove('resizing'); hideHint();
+        if(!moved) liveResizeTile(tile, tileId, !liveLg, tile.parentElement);
+      }
+      document.addEventListener('pointermove', onMove);
+      document.addEventListener('pointerup', onUp);
+    }
+    handle.addEventListener('pointerdown', start);
+    handle.addEventListener('keydown', e => {
+      if(e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        liveResizeTile(tile, tileId, state.sizes[tileId] !== 'lg', tile.parentElement);
+      }
+    });
+  }
+  const resizeObserver = new MutationObserver(() => {
+    zonesContainer.querySelectorAll('.resize-handle').forEach(h => {
+      if(!h.dataset.bound){ h.dataset.bound = '1'; setupResize(h); }
+    });
+  });
+  resizeObserver.observe(zonesContainer, {childList:true, subtree:true});
+
+  // ---------- actions ----------
+  function addRicetta(){
+    const titolo = document.getElementById('rTitolo').value.trim();
+    const ingredienti = document.getElementById('rIngredienti').value.trim();
+    const preparazione = document.getElementById('rPreparazione').value.trim();
+    if(!titolo) return;
+    state.ricette.push({id: nextId.ricette++, titolo, ingredienti, preparazione});
+    ricetteFormOpen = false;
+    document.getElementById('ricetteForm').classList.remove('open');
+    refreshRicetteGrid();
+  }
+  function addBolletta(){
+    const nome = document.getElementById('bNome').value.trim();
+    const importo = parseFloat(document.getElementById('bImporto').value);
+    const scadenza = document.getElementById('bScadenza').value;
+    if(!nome || isNaN(importo) || !scadenza) return;
+    state.bollette.push({id: nextId.bollette++, nome, importo, scadenza, pagata:false});
+    bolletteFormOpen = false;
+    document.getElementById('bolletteForm').classList.remove('open');
+    refreshBolletteGrid();
+  }
+
+  zonesContainer.addEventListener('click', e => {
+    const recipeCard = e.target.closest('.recipe-card');
+    if(recipeCard && !e.target.closest('[data-action]')){
+      const detail = recipeCard.querySelector('.gallery-card-detail');
+      const isOpen = recipeCard.classList.contains('open');
+      if(isOpen){
+        recipeCard.classList.remove('open');
+        detail.style.maxHeight = '0px';
+      } else {
+        recipeCard.classList.add('open');
+        detail.style.maxHeight = detail.scrollHeight + 'px';
+      }
+      return;
+    }
+
+    const el = e.target.closest('[data-action]');
+    if(!el) return;
+    const action = el.dataset.action;
+    const id = el.dataset.id !== undefined ? Number(el.dataset.id) : null;
+
+    if(action === 'toggle-size'){
+      const tileId = el.dataset.tile;
+      const targetTile = zonesContainer.querySelector(`[data-tile="${tileId}"]`);
+      liveResizeTile(targetTile, tileId, state.sizes[tileId] !== 'lg', targetTile.parentElement);
+    } else if(action === 'spesa-del'){
+      state.spesa = state.spesa.filter(x => x.id !== id);
+      flipRenderDashboard();
+    } else if(action === 'spesa-clear'){
+      state.spesa = state.spesa.filter(x => !x.comprato);
+      flipRenderDashboard();
+    } else if(action === 'ricetta-form-toggle'){
+      ricetteFormOpen = !ricetteFormOpen;
+      const form = document.getElementById('ricetteForm');
+      form.classList.toggle('open', ricetteFormOpen);
+      if(ricetteFormOpen){ const t = document.getElementById('rTitolo'); if(t) t.focus(); }
+    } else if(action === 'ricetta-add'){
+      addRicetta();
+    } else if(action === 'ricetta-del'){
+      state.ricette = state.ricette.filter(x => x.id !== id);
+      refreshRicetteGrid();
+    } else if(action === 'bolletta-form-toggle'){
+      bolletteFormOpen = !bolletteFormOpen;
+      const form = document.getElementById('bolletteForm');
+      form.classList.toggle('open', bolletteFormOpen);
+      if(bolletteFormOpen){ const t = document.getElementById('bNome'); if(t) t.focus(); }
+    } else if(action === 'bolletta-add'){
+      addBolletta();
+    } else if(action === 'bolletta-del'){
+      state.bollette = state.bollette.filter(x => x.id !== id);
+      refreshBolletteGrid();
+    }
+  });
+
+  zonesContainer.addEventListener('input', e => {
+    if(e.target.id === 'ricetteSearch'){ ricetteSearch = e.target.value; refreshRicetteGrid(); }
+    else if(e.target.id === 'bolletteSearch'){ bolletteSearch = e.target.value; refreshBolletteGrid(); }
+  });
+
+  zonesContainer.addEventListener('change', e => {
+    const el = e.target;
+    const action = el.dataset.action;
+    const id = el.dataset.id !== undefined ? Number(el.dataset.id) : null;
+    if(action === 'spesa-toggle'){
+      const item = state.spesa.find(x => x.id === id);
+      if(item){ item.comprato = el.checked; flipRenderDashboard(); }
+    } else if(action === 'bolletta-check'){
+      const b = state.bollette.find(x => x.id === id);
+      if(b){ b.pagata = el.checked; refreshBolletteGrid(); }
+    }
+  });
+
+  zonesContainer.addEventListener('submit', e => {
+    if(e.target.id === 'spesaForm'){
+      e.preventDefault();
+      const input = document.getElementById('spesaInput');
+      const val = input.value.trim();
+      if(!val) return;
+      state.spesa.push({id: nextId.spesa++, nome: val, comprato:false});
+      flipRenderDashboard();
+    }
+  });
+
+  // ---------- SETTINGS ----------
+  const themeSwitch = document.getElementById('themeSwitch');
+  function applyTheme(){
+    document.documentElement.setAttribute('data-theme', state.settings.theme);
+    themeSwitch.classList.toggle('on', state.settings.theme === 'dark');
+  }
+  themeSwitch.addEventListener('click', () => {
+    state.settings.theme = state.settings.theme === 'dark' ? 'light' : 'dark';
+    applyTheme();
+    saveState();
+  });
+
+  const cardSantoSwitch = document.getElementById('cardSantoSwitch');
+  const cardSplidSwitch = document.getElementById('cardSplidSwitch');
+  cardSantoSwitch.classList.toggle('on', state.settings.cardVisibility.santo);
+  cardSplidSwitch.classList.toggle('on', state.settings.cardVisibility.splid);
+  cardSantoSwitch.addEventListener('click', () => {
+    state.settings.cardVisibility.santo = !state.settings.cardVisibility.santo;
+    cardSantoSwitch.classList.toggle('on', state.settings.cardVisibility.santo);
+    renderSantoCarousel();
+    saveState();
+  });
+  cardSplidSwitch.addEventListener('click', () => {
+    state.settings.cardVisibility.splid = !state.settings.cardVisibility.splid;
+    cardSplidSwitch.classList.toggle('on', state.settings.cardVisibility.splid);
+    renderSplidCard();
+    saveState();
+  });
+
+  const splidCodeInput = document.getElementById('splidCodeInput');
+  splidCodeInput.value = state.settings.splidCode || '';
+  document.getElementById('splidConnectBtn').addEventListener('click', () => {
+    state.settings.splidCode = splidCodeInput.value.trim();
+    saveState();
+    loadSplid();
+  });
+  document.getElementById('splidDisconnectBtn').addEventListener('click', () => {
+    state.settings.splidCode = '';
+    splidCodeInput.value = '';
+    splidStatus = 'idle';
+    saveState();
+    renderSplidCard();
+  });
+  splidCardHolder.addEventListener('click', e => {
+    const el = e.target.closest('[data-action]');
+    if(!el) return;
+    if(el.dataset.action === 'splid-open-settings'){
+      showSettings();
+      splidCodeInput.focus();
+    } else if(el.dataset.action === 'splid-retry'){
+      loadSplid();
+    } else if(el.dataset.action === 'splid-toggle'){
+      setSplidExpanded(!splidExpanded);
+    }
+  });
+
+  const reminderInput = document.getElementById('reminderDays');
+  reminderInput.value = state.settings.reminderDays;
+  reminderInput.addEventListener('change', () => {
+    const v = parseInt(reminderInput.value, 10);
+    state.settings.reminderDays = isNaN(v) ? 5 : v;
+    flipRenderDashboard();
+  });
+
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'casa-dati.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    if(!confirm('Ripristinare i dati di esempio? Le modifiche di questa sessione verranno perse.')) return;
+    state = initialState();
+    nextId = { spesa: 5, bollette: 4, ricette: 3 };
+    ricetteSearch = ''; bolletteSearch = '';
+    applyTheme();
+    showDashboard();
+    saveState();
+  });
+
+  // ---------- init ----------
+  applyTheme();
+  renderSplidCard();
+  setupSplidSwipe();
+  loadSplid();
+  renderQuickRow();
+  renderSantoCarousel();
+  refreshSantoDelGiorno();
+  loadWeather();
+  showDashboard();
+})();
+</script>
+</body>
+</html>
   [data-theme="dark"]{
     --paper: #14160F;
     --surface: #1E2118;
